@@ -16,8 +16,11 @@ import {
   Edit as EditIcon,
   SportsEsports as GameIcon,
   AccountCircle as ProfileIcon,
+  DarkMode as DarkModeIcon,
+  LightMode as LightModeIcon,
 } from '@mui/icons-material'
 import { useAuth } from '../contexts/AuthContext'
+import { useThemeMode } from '../contexts/ThemeContext'
 import { supabase } from '../lib/supabase'
 
 const DRAWER_WIDTH = 240
@@ -35,6 +38,7 @@ export default function Layout() {
   const [editBoardId, setEditBoardId] = useState(null)
   const [editBoardName, setEditBoardName] = useState('')
   const { user, profile, isAdmin, signOut } = useAuth()
+  const { mode, toggleMode } = useThemeMode()
   const navigate = useNavigate()
 
   useEffect(() => { fetchBoards() }, [])
@@ -171,6 +175,9 @@ export default function Layout() {
           <Typography variant="h6" fontWeight={700} sx={{ flexGrow: 1, color: 'primary.light' }}>
             공동 게임 구역
           </Typography>
+          <IconButton onClick={toggleMode} title={mode === 'dark' ? '라이트 모드' : '다크 모드'} sx={{ color: 'text.secondary' }}>
+            {mode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
+          </IconButton>
           <IconButton onClick={() => navigate('/posts/new')} color="primary" title="새 글 작성">
             <AddIcon />
           </IconButton>

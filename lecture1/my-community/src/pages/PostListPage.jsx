@@ -2,14 +2,15 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   Box, Typography, Button, Table, TableBody, TableCell, TableContainer,
-  TableHead, TableRow, Paper, Chip, Pagination, Skeleton, Divider,
+  TableHead, TableRow, Paper, Chip, Pagination, Skeleton, Divider, TextField, InputAdornment, IconButton,
 } from '@mui/material'
 import {
   Add as AddIcon, Visibility as EyeIcon,
   ChatBubbleOutlineRounded as CommentIcon,
-  Whatshot as FireIcon,
+  Whatshot as FireIcon, Search as SearchIcon, Close as CloseIcon,
 } from '@mui/icons-material'
 import { supabase } from '../lib/supabase'
+import UserProfileDialog from '../components/UserProfileDialog'
 
 const PAGE_SIZE = 15
 
@@ -23,7 +24,7 @@ const formatDate = (iso) => {
   return d.toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
 }
 
-const PostRow = ({ post, onClick, badge, number }) => (
+const PostRow = ({ post, onClick, badge, number, onAuthorClick }) => (
   <TableRow
     hover
     onClick={onClick}
@@ -44,8 +45,15 @@ const PostRow = ({ post, onClick, badge, number }) => (
         <Typography variant="body2" fontWeight={badge ? 700 : 500}>{post.title}</Typography>
       </Box>
     </TableCell>
-    <TableCell sx={{ color: 'text.secondary', fontSize: 13 }}>
-      {post.profiles?.username ?? post.username ?? '익명'}
+    <TableCell sx={{ fontSize: 13 }}>
+      <Typography
+        variant="body2"
+        color="text.secondary"
+        sx={{ cursor: 'pointer', '&:hover': { color: 'primary.main', textDecoration: 'underline' } }}
+        onClick={(e) => { e.stopPropagation(); onAuthorClick(post.author_id) }}
+      >
+        {post.profiles?.username ?? post.username ?? '익명'}
+      </Typography>
     </TableCell>
     <TableCell sx={{ color: 'text.secondary', fontSize: 12 }}>
       {formatDate(post.created_at)}
@@ -72,18 +80,30 @@ export default function PostListPage() {
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [profileUserId, setProfileUserId] = useState(null)
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchTerm), 300)
+    return () => clearTimeout(t)
+  }, [searchTerm])
 
   useEffect(() => {
     setPage(1)
-  }, [boardId])
+  }, [boardId, debouncedSearch])
 
   useEffect(() => {
     fetchAll()
-  }, [boardId, page])
+  }, [boardId, page, debouncedSearch])
 
   const fetchAll = async () => {
     setLoading(true)
-    await Promise.all([fetchBoardName(), fetchPopularPosts(), fetchPosts()])
+    const tasks = debouncedSearch
+      ? [fetchBoardName(), fetchPosts()]
+      : [fetchBoardName(), fetchPopularPosts(), fetchPosts()]
+    await Promise.all(tasks)
+    if (debouncedSearch) setPopularPosts([])
     setLoading(false)
   }
 
@@ -100,12 +120,14 @@ export default function PostListPage() {
   const fetchPosts = async () => {
     const from = (page - 1) * PAGE_SIZE
     const to = from + PAGE_SIZE - 1
-    const { data, count, error } = await supabase
+    let query = supabase
       .from('posts')
-      .select(`id, title, view_count, created_at, profiles:author_id(username), comments(count)`, { count: 'exact' })
+      .select(`id, title, view_count, created_at, author_id, profiles:author_id(username), comments(count)`, { count: 'exact' })
       .eq('board_id', boardId)
       .order('created_at', { ascending: false })
       .range(from, to)
+    if (debouncedSearch) query = query.ilike('title', `%${debouncedSearch}%`)
+    const { data, count, error } = await query
     if (!error) {
       setPosts(data ?? [])
       setTotal(count ?? 0)
@@ -139,6 +161,20 @@ export default function PostListPage() {
         </Button>
       </Box>
 
+      <TextField
+        fullWidth size="small" placeholder="게시글 제목 검색..."
+        value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+        sx={{ mb: 2 }}
+        InputProps={{
+          startAdornment: <InputAdornment position="start"><SearchIcon sx={{ color: 'text.secondary', fontSize: 20 }} /></InputAdornment>,
+          endAdornment: searchTerm && (
+            <InputAdornment position="end">
+              <IconButton size="small" onClick={() => setSearchTerm('')}><CloseIcon fontSize="small" /></IconButton>
+            </InputAdornment>
+          ),
+        }}
+      />
+
       <TableContainer component={Paper} sx={{ border: '1px solid', borderColor: 'divider' }}>
         <Table>
           {tableHead}
@@ -160,6 +196,7 @@ export default function PostListPage() {
                     post={post}
                     badge
                     onClick={() => navigate(`/posts/${post.id}`)}
+                    onAuthorClick={setProfileUserId}
                   />
                 ))}
 
@@ -186,6 +223,7 @@ export default function PostListPage() {
                       post={post}
                       number={total - (page - 1) * PAGE_SIZE - idx}
                       onClick={() => navigate(`/posts/${post.id}`)}
+                      onAuthorClick={setProfileUserId}
                     />
                   ))
                 )}
@@ -200,6 +238,12 @@ export default function PostListPage() {
           <Pagination count={totalPages} page={page} onChange={(_, v) => setPage(v)} color="primary" />
         </Box>
       )}
+
+      <UserProfileDialog
+        userId={profileUserId}
+        open={Boolean(profileUserId)}
+        onClose={() => setProfileUserId(null)}
+      />
     </Box>
   )
 }

@@ -16,6 +16,7 @@ export default function ProfilePage() {
   const fileRef = useRef()
 
   const [username, setUsername] = useState(profile?.username ?? '')
+  const [bio, setBio] = useState(profile?.bio ?? '')
   const [avatarPreview, setAvatarPreview] = useState(profile?.avatar_url ?? null)
   const [avatarFile, setAvatarFile] = useState(null)
   const [profileMsg, setProfileMsg] = useState(null)
@@ -72,7 +73,7 @@ export default function ProfilePage() {
       }
       const { error } = await supabase
         .from('profiles')
-        .update({ username: username.trim(), avatar_url })
+        .update({ username: username.trim(), avatar_url, bio: bio.trim() || null })
         .eq('id', user.id)
       if (error) throw error
       setProfileMsg({ type: 'success', text: '프로필이 수정되었습니다.' })
@@ -148,6 +149,14 @@ export default function ProfilePage() {
         <TextField
           fullWidth label="닉네임" value={username}
           onChange={(e) => setUsername(e.target.value)}
+          sx={{ mb: 2 }}
+        />
+        <TextField
+          fullWidth label="한줄 소개" value={bio}
+          onChange={(e) => setBio(e.target.value)}
+          placeholder="자신을 한 문장으로 소개해보세요!"
+          inputProps={{ maxLength: 80 }}
+          helperText={`${bio.length}/80`}
           sx={{ mb: 2 }}
         />
         <TextField
