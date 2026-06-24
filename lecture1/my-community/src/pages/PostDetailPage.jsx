@@ -131,7 +131,7 @@ export default function PostDetailPage() {
   const fetchPost = async () => {
     const { data } = await supabase
       .from('posts')
-      .select('*, profiles:author_id(username), post_reactions(*)')
+      .select('*, profiles:author_id(username, avatar_url), post_reactions(*)')
       .eq('id', postId)
       .single()
     setPost(data)
@@ -213,8 +213,16 @@ export default function PostDetailPage() {
             </IconButton>
           )}
         </Box>
-        <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-          <Typography variant="body2" color="text.secondary">작성자: <strong>{post.profiles?.username}</strong></Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, flexWrap: 'wrap' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Avatar
+              src={post.profiles?.avatar_url ?? undefined}
+              sx={{ width: 32, height: 32, bgcolor: 'primary.dark', fontSize: 13 }}
+            >
+              {post.profiles?.username?.[0]?.toUpperCase()}
+            </Avatar>
+            <Typography variant="body2" fontWeight={600}>{post.profiles?.username}</Typography>
+          </Box>
           <Typography variant="body2" color="text.secondary">{formatDate(post.created_at)}</Typography>
           <Typography variant="body2" color="text.secondary">조회 {post.view_count}</Typography>
         </Box>
