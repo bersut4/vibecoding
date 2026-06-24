@@ -14,6 +14,7 @@ import {
   Add as AddIcon,
   Delete as DeleteIcon,
   SportsEsports as GameIcon,
+  AccountCircle as ProfileIcon,
 } from '@mui/icons-material'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -160,6 +161,10 @@ export default function Layout() {
               <Typography variant="body2" color="text.secondary">{profile?.username ?? user?.email}</Typography>
             </MenuItem>
             <Divider />
+            <MenuItem onClick={() => { navigate('/profile'); setAnchorEl(null) }}>
+              <ProfileIcon fontSize="small" sx={{ mr: 1 }} />
+              프로필 수정
+            </MenuItem>
             <MenuItem onClick={() => { signOut(); setAnchorEl(null) }}>
               <LogoutIcon fontSize="small" sx={{ mr: 1 }} />
               로그아웃

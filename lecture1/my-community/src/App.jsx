@@ -8,6 +8,7 @@ import PostDetailPage from './pages/PostDetailPage'
 import PostCreatePage from './pages/PostCreatePage'
 import ChatPage from './pages/ChatPage'
 import ChatRoomPage from './pages/ChatRoomPage'
+import ProfilePage from './pages/ProfilePage'
 import { CircularProgress, Box } from '@mui/material'
 
 const PrivateRoute = ({ children }) => {
@@ -33,6 +34,7 @@ function App() {
           <Route path="posts/:postId" element={<PostDetailPage />} />
           <Route path="chat" element={<ChatPage />} />
           <Route path="chat/:channelId" element={<ChatRoomPage />} />
+          <Route path="profile" element={<ProfilePage />} />
         </Route>
       </Routes>
     </BrowserRouter>
