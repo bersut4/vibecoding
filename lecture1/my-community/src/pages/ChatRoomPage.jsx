@@ -2,13 +2,15 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   Box, Typography, Paper, TextField, IconButton, Avatar, Chip,
-  Divider, CircularProgress, Tooltip, Menu, MenuItem,
+  CircularProgress, Menu, LinearProgress,
 } from '@mui/material'
 import {
   ArrowBack, Send as SendIcon, Edit as EditIcon, Delete as DeleteIcon,
+  AttachFile as AttachIcon,
 } from '@mui/icons-material'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { uploadMedia, isVideo } from '../utils/uploadMedia'
 
 const EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🔥']
 
@@ -27,7 +29,9 @@ export default function ChatRoomPage() {
   const [editText, setEditText] = useState('')
   const [emojiMenuAnchor, setEmojiMenuAnchor] = useState(null)
   const [emojiTargetId, setEmojiTargetId] = useState(null)
+  const [uploading, setUploading] = useState(false)
   const bottomRef = useRef(null)
+  const fileRef = useRef()
 
   useEffect(() => {
     fetchChannel()
@@ -67,6 +71,24 @@ export default function ChatRoomPage() {
     if (!text.trim() || !user) return
     await supabase.from('messages').insert({ content: text.trim(), author_id: user.id, channel_id: Number(channelId) })
     setText('')
+  }
+
+  const handleMediaSend = async (e) => {
+    const file = e.target.files[0]
+    if (!file || !user) return
+    setUploading(true)
+    try {
+      const url = await uploadMedia(file, user.id)
+      await supabase.from('messages').insert({
+        content: file.name,
+        author_id: user.id,
+        channel_id: Number(channelId),
+        media_url: url,
+      })
+    } finally {
+      setUploading(false)
+      e.target.value = ''
+    }
   }
 
   const handleDelete = async (msgId) => {
@@ -133,22 +155,36 @@ export default function ChatRoomPage() {
                   ) : (
                     <Box
                       sx={{
-                        px: 2, py: 1, borderRadius: isMe ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+                        px: msg.media_url ? 1 : 2, py: msg.media_url ? 1 : 1,
+                        borderRadius: isMe ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
                         bgcolor: isMe ? 'primary.dark' : 'rgba(255,255,255,0.05)',
                         border: isMe ? 'none' : '1px solid rgba(255,255,255,0.08)',
                         cursor: 'pointer',
                       }}
                       onContextMenu={(e) => { e.preventDefault(); setEmojiTargetId(msg.id); setEmojiMenuAnchor(e.currentTarget) }}
                     >
-                      <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{msg.content}</Typography>
-                      {msg.is_edited && <Typography variant="caption" color="text.secondary"> (수정됨)</Typography>}
+                      {msg.media_url ? (
+                        isVideo(msg.media_url) ? (
+                          <video src={msg.media_url} controls style={{ maxWidth: 280, maxHeight: 200, borderRadius: 8, display: 'block' }} />
+                        ) : (
+                          <Box component="img" src={msg.media_url} sx={{ maxWidth: 280, maxHeight: 200, borderRadius: 1, display: 'block', cursor: 'pointer' }}
+                            onClick={() => window.open(msg.media_url, '_blank')} />
+                        )
+                      ) : (
+                        <>
+                          <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{msg.content}</Typography>
+                          {msg.is_edited && <Typography variant="caption" color="text.secondary"> (수정됨)</Typography>}
+                        </>
+                      )}
                     </Box>
                   )}
                   {isMe && editingId !== msg.id && (
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5, mt: 0.25 }}>
-                      <IconButton size="small" onClick={() => { setEditingId(msg.id); setEditText(msg.content) }}>
-                        <EditIcon sx={{ fontSize: 13, color: 'text.secondary' }} />
-                      </IconButton>
+                      {!msg.media_url && (
+                        <IconButton size="small" onClick={() => { setEditingId(msg.id); setEditText(msg.content) }}>
+                          <EditIcon sx={{ fontSize: 13, color: 'text.secondary' }} />
+                        </IconButton>
+                      )}
                       <IconButton size="small" onClick={() => handleDelete(msg.id)}>
                         <DeleteIcon sx={{ fontSize: 13, color: 'text.secondary' }} />
                       </IconButton>
@@ -189,10 +225,15 @@ export default function ChatRoomPage() {
       </Menu>
 
       <Paper sx={{ p: 1.5 }}>
+        {uploading && <LinearProgress sx={{ mb: 1 }} />}
         <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
           <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.dark', fontSize: 13 }}>
             {profile?.username?.[0]?.toUpperCase()}
           </Avatar>
+          <input ref={fileRef} type="file" accept="image/*,video/*" hidden onChange={handleMediaSend} />
+          <IconButton size="small" onClick={() => fileRef.current.click()} sx={{ color: 'text.secondary' }}>
+            <AttachIcon />
+          </IconButton>
           <TextField
             fullWidth size="small" placeholder={`# ${channel?.name ?? ''}에 메시지 보내기`}
             value={text} onChange={(e) => setText(e.target.value)}

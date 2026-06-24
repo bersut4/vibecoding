@@ -7,6 +7,7 @@ import {
 import { ArrowBack, Delete as DeleteIcon, Send as SendIcon } from '@mui/icons-material'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { isVideo } from '../utils/uploadMedia'
 
 const EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🔥']
 
@@ -43,7 +44,7 @@ const EmojiReactionBar = ({ reactions, onToggle, userId }) => {
   )
 }
 
-const CommentItem = ({ comment, allComments, onReply, onDelete, onReaction, userId }) => {
+const CommentItem = ({ comment, allComments, onReply, onDelete, onReaction, userId, isAdmin }) => {
   const [replyOpen, setReplyOpen] = useState(false)
   const [replyText, setReplyText] = useState('')
   const replies = allComments.filter((c) => c.parent_id === comment.id)
@@ -59,7 +60,7 @@ const CommentItem = ({ comment, allComments, onReply, onDelete, onReaction, user
             <Typography variant="body2" fontWeight={600}>{comment.profiles?.username}</Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               <Typography variant="caption" color="text.secondary">{formatDate(comment.created_at)}</Typography>
-              {comment.author_id === userId && (
+              {(comment.author_id === userId || isAdmin) && (
                 <IconButton size="small" onClick={() => onDelete(comment.id)}>
                   <DeleteIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
                 </IconButton>
@@ -95,7 +96,7 @@ const CommentItem = ({ comment, allComments, onReply, onDelete, onReaction, user
                 <Typography variant="caption" fontWeight={600}>{reply.profiles?.username}</Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                   <Typography variant="caption" color="text.secondary" sx={{ fontSize: 11 }}>{formatDate(reply.created_at)}</Typography>
-                  {reply.author_id === userId && (
+                  {(reply.author_id === userId || isAdmin) && (
                     <IconButton size="small" onClick={() => onDelete(reply.id)}>
                       <DeleteIcon sx={{ fontSize: 12, color: 'text.secondary' }} />
                     </IconButton>
@@ -115,7 +116,7 @@ const CommentItem = ({ comment, allComments, onReply, onDelete, onReaction, user
 export default function PostDetailPage() {
   const { postId } = useParams()
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, isAdmin } = useAuth()
   const [post, setPost] = useState(null)
   const [comments, setComments] = useState([])
   const [commentText, setCommentText] = useState('')
@@ -183,12 +184,12 @@ export default function PostDetailPage() {
   }
 
   const handleDeleteComment = async (commentId) => {
-    await supabase.from('comments').delete().eq('id', commentId).eq('author_id', user.id)
+    await supabase.from('comments').delete().eq('id', commentId)
     fetchComments()
   }
 
   const handleDeletePost = async () => {
-    await supabase.from('posts').delete().eq('id', postId).eq('author_id', user.id)
+    await supabase.from('posts').delete().eq('id', postId)
     navigate(-1)
   }
 
@@ -206,7 +207,7 @@ export default function PostDetailPage() {
       <Paper sx={{ p: 3, mb: 2 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
           <Typography variant="h5" fontWeight={700}>{post.title}</Typography>
-          {post.author_id === user?.id && (
+          {(post.author_id === user?.id || isAdmin) && (
             <IconButton onClick={handleDeletePost} color="error" size="small">
               <DeleteIcon />
             </IconButton>
@@ -219,6 +220,18 @@ export default function PostDetailPage() {
         </Box>
         <Divider sx={{ mb: 2 }} />
         <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.8 }}>{post.content}</Typography>
+        {post.media_urls?.length > 0 && (
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 2 }}>
+            {post.media_urls.map((url, i) => (
+              isVideo(url) ? (
+                <video key={i} src={url} controls style={{ maxWidth: '100%', maxHeight: 400, borderRadius: 8 }} />
+              ) : (
+                <Box key={i} component="img" src={url} sx={{ maxWidth: '100%', maxHeight: 400, borderRadius: 1, cursor: 'pointer', objectFit: 'contain' }}
+                  onClick={() => window.open(url, '_blank')} />
+              )
+            ))}
+          </Box>
+        )}
         <Divider sx={{ mt: 3, mb: 1 }} />
         <EmojiReactionBar reactions={post.post_reactions ?? []} onToggle={handlePostReaction} userId={user?.id} />
       </Paper>
@@ -228,7 +241,7 @@ export default function PostDetailPage() {
         {topComments.map((c) => (
           <CommentItem key={c.id} comment={c} allComments={comments}
             onReply={handleReply} onDelete={handleDeleteComment}
-            onReaction={handleCommentReaction} userId={user?.id} />
+            onReaction={handleCommentReaction} userId={user?.id} isAdmin={isAdmin} />
         ))}
         <Divider sx={{ my: 2 }} />
         <Box sx={{ display: 'flex', gap: 1 }}>

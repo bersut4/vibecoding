@@ -1,9 +1,10 @@
-import { useState } from 'react'
-import { Outlet, useNavigate, useParams } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Outlet, useNavigate } from 'react-router-dom'
 import {
   Box, Drawer, AppBar, Toolbar, Typography, List, ListItem,
   ListItemButton, ListItemIcon, ListItemText, IconButton, Avatar,
   Menu, MenuItem, Divider, Chip, useMediaQuery, useTheme,
+  Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button,
 } from '@mui/material'
 import {
   Menu as MenuIcon,
@@ -11,27 +12,49 @@ import {
   Chat as ChatIcon,
   Logout as LogoutIcon,
   Add as AddIcon,
-  EmojiEvents as TrophyIcon,
+  Delete as DeleteIcon,
   SportsEsports as GameIcon,
-  Groups as GroupsIcon,
 } from '@mui/icons-material'
 import { useAuth } from '../contexts/AuthContext'
+import { supabase } from '../lib/supabase'
 
 const DRAWER_WIDTH = 240
-
-const boards = [
-  { id: 1, name: '자유게시판', icon: <ForumIcon /> },
-  { id: 2, name: '공략 & 팁', icon: <TrophyIcon /> },
-  { id: 3, name: '모집 & 파티', icon: <GroupsIcon /> },
-]
 
 export default function Layout() {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
   const [mobileOpen, setMobileOpen] = useState(false)
   const [anchorEl, setAnchorEl] = useState(null)
-  const { user, profile, signOut } = useAuth()
+  const [boards, setBoards] = useState([])
+  const [addOpen, setAddOpen] = useState(false)
+  const [newBoardName, setNewBoardName] = useState('')
+  const [newBoardDesc, setNewBoardDesc] = useState('')
+  const { user, profile, isAdmin, signOut } = useAuth()
   const navigate = useNavigate()
+
+  useEffect(() => { fetchBoards() }, [])
+
+  const fetchBoards = async () => {
+    const { data } = await supabase.from('boards').select('*').order('id')
+    setBoards(data ?? [])
+  }
+
+  const handleAddBoard = async () => {
+    if (!newBoardName.trim()) return
+    await supabase.from('boards').insert({ name: newBoardName.trim(), description: newBoardDesc.trim() })
+    setNewBoardName('')
+    setNewBoardDesc('')
+    setAddOpen(false)
+    fetchBoards()
+  }
+
+  const handleDeleteBoard = async (boardId, e) => {
+    e.stopPropagation()
+    if (!window.confirm('이 게시판을 삭제하시겠습니까? 게시판의 모든 게시글도 삭제됩니다.')) return
+    await supabase.from('boards').delete().eq('id', boardId)
+    fetchBoards()
+    navigate('/boards/' + (boards.find(b => b.id !== boardId)?.id ?? ''))
+  }
 
   const drawer = (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'background.paper' }}>
@@ -40,23 +63,35 @@ export default function Layout() {
         sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer', '&:hover': { opacity: 0.8 } }}
       >
         <GameIcon sx={{ color: 'primary.main', fontSize: 28 }} />
-        <Typography variant="h6" fontWeight={700} color="primary.light">
-          JGA
-        </Typography>
+        <Typography variant="h6" fontWeight={700} color="primary.light">JGA</Typography>
       </Box>
       <Divider />
 
-      <Typography variant="caption" sx={{ px: 2, pt: 2, pb: 0.5, color: 'text.secondary', fontWeight: 600, letterSpacing: 1 }}>
-        게시판
-      </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', px: 2, pt: 2, pb: 0.5 }}>
+        <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, letterSpacing: 1, flexGrow: 1 }}>
+          게시판
+        </Typography>
+        {isAdmin && (
+          <IconButton size="small" onClick={() => setAddOpen(true)} sx={{ color: 'primary.light' }}>
+            <AddIcon sx={{ fontSize: 16 }} />
+          </IconButton>
+        )}
+      </Box>
+
       <List dense>
         {boards.map((board) => (
-          <ListItem key={board.id} disablePadding>
+          <ListItem key={board.id} disablePadding secondaryAction={
+            isAdmin && (
+              <IconButton size="small" onClick={(e) => handleDeleteBoard(board.id, e)} sx={{ color: 'error.main', opacity: 0.6, '&:hover': { opacity: 1 } }}>
+                <DeleteIcon sx={{ fontSize: 14 }} />
+              </IconButton>
+            )
+          }>
             <ListItemButton
               onClick={() => { navigate(`/boards/${board.id}`); setMobileOpen(false) }}
               sx={{ borderRadius: 1, mx: 1, '&:hover': { bgcolor: 'rgba(156,100,247,0.1)' } }}
             >
-              <ListItemIcon sx={{ minWidth: 36, color: 'primary.light' }}>{board.icon}</ListItemIcon>
+              <ListItemIcon sx={{ minWidth: 36, color: 'primary.light' }}><ForumIcon /></ListItemIcon>
               <ListItemText primary={board.name} primaryTypographyProps={{ fontSize: 14 }} />
             </ListItemButton>
           </ListItem>
@@ -86,7 +121,10 @@ export default function Layout() {
           {profile?.username?.[0]?.toUpperCase() ?? user?.email?.[0]?.toUpperCase()}
         </Avatar>
         <Box sx={{ flexGrow: 1, overflow: 'hidden' }}>
-          <Typography variant="body2" fontWeight={600} noWrap>{profile?.username ?? user?.email}</Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <Typography variant="body2" fontWeight={600} noWrap>{profile?.username ?? user?.email}</Typography>
+            {isAdmin && <Chip label="관리자" size="small" sx={{ height: 16, fontSize: 9, bgcolor: 'rgba(248,113,113,0.15)', color: '#f87171' }} />}
+          </Box>
           <Chip label="온라인" size="small" sx={{ height: 16, fontSize: 10, bgcolor: 'rgba(74,222,128,0.15)', color: '#4ade80' }} />
         </Box>
       </Box>
@@ -146,6 +184,20 @@ export default function Layout() {
       <Box component="main" sx={{ flexGrow: 1, width: { md: `calc(100% - ${DRAWER_WIDTH}px)` }, mt: '64px', p: { xs: 1.5, md: 3 } }}>
         <Outlet />
       </Box>
+
+      <Dialog open={addOpen} onClose={() => setAddOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>새 게시판 추가</DialogTitle>
+        <DialogContent>
+          <TextField autoFocus fullWidth label="게시판 이름" value={newBoardName}
+            onChange={(e) => setNewBoardName(e.target.value)} sx={{ mb: 2, mt: 1 }} />
+          <TextField fullWidth label="게시판 설명 (선택)" value={newBoardDesc}
+            onChange={(e) => setNewBoardDesc(e.target.value)} />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAddOpen(false)}>취소</Button>
+          <Button variant="contained" onClick={handleAddBoard}>추가</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   )
 }
