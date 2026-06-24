@@ -21,6 +21,7 @@ export default function GuestbookForm({ onSubmitted }) {
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
+  const [referralOther, setReferralOther] = useState('')
 
   const [form, setForm] = useState({
     name: '',
@@ -37,6 +38,11 @@ export default function GuestbookForm({ onSubmitted }) {
 
   const set = (field) => (e) => setForm((prev) => ({ ...prev, [field]: e.target.value }))
 
+  const getFinalReferralSource = () => {
+    if (form.referral_source === '기타') return referralOther.trim() || '기타'
+    return form.referral_source || null
+  }
+
   const handleSubmit = async () => {
     if (!form.name.trim()) { setError('이름을 입력해주세요.'); return }
     if (!form.message.trim()) { setError('메시지를 입력해주세요.'); return }
@@ -51,7 +57,7 @@ export default function GuestbookForm({ onSubmitted }) {
       phone: form.phone.trim() || null,
       sns_account: form.sns_account.trim() || null,
       occupation: form.occupation.trim() || null,
-      referral_source: form.referral_source || null,
+      referral_source: getFinalReferralSource(),
       keyword: form.keyword.trim() || null,
       emoji: form.emoji || null,
       star_rating: form.star_rating || null,
@@ -66,6 +72,7 @@ export default function GuestbookForm({ onSubmitted }) {
         sns_account: '', occupation: '', referral_source: '',
         keyword: '', emoji: '', star_rating: 0,
       })
+      setReferralOther('')
       setExpanded(false)
       setTimeout(() => setSuccess(false), 4000)
       onSubmitted?.()
@@ -212,7 +219,7 @@ export default function GuestbookForm({ onSubmitted }) {
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
                 어떻게 알게 되셨나요?
               </Typography>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.8 }}>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.8, mb: form.referral_source === '기타' ? 1.5 : 0 }}>
                 {REFERRAL_OPTIONS.map((opt) => (
                   <Chip
                     key={opt}
@@ -228,6 +235,17 @@ export default function GuestbookForm({ onSubmitted }) {
                   />
                 ))}
               </Box>
+              <Collapse in={form.referral_source === '기타'}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  placeholder="어떻게 알게 되셨는지 직접 입력해주세요"
+                  value={referralOther}
+                  onChange={(e) => setReferralOther(e.target.value)}
+                  autoFocus
+                  sx={{ mt: 0.5 }}
+                />
+              </Collapse>
             </Grid>
           </Grid>
         </Collapse>
