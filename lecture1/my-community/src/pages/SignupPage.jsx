@@ -46,17 +46,13 @@ export default function SignupPage() {
     <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'background.default', px: 2 }}>
       <Card sx={{ width: '100%', maxWidth: 420 }}>
         <CardContent sx={{ p: 4, textAlign: 'center' }}>
-          <Typography variant="h2" mb={2}>📧</Typography>
-          <Typography variant="h5" fontWeight={700} mb={2} color="primary.light">인증 이메일을 확인해주세요!</Typography>
-          <Typography color="text.secondary" mb={1}>
-            <Typography component="span" sx={{ color: 'primary.light', fontWeight: 600 }}>{form.email}</Typography> 으로
-          </Typography>
+          <Typography variant="h2" mb={2}>🎮</Typography>
+          <Typography variant="h5" fontWeight={700} mb={2} color="primary.light">회원가입 완료!</Typography>
           <Typography color="text.secondary" mb={3}>
-            인증 링크가 전송되었습니다.<br />
-            메일함에서 링크를 클릭하면<br />
-            로그인하실 수 있습니다.
+            <Typography component="span" sx={{ color: 'primary.light', fontWeight: 600 }}>{form.username}</Typography> 님, 환영합니다!<br />
+            지금 바로 JGA에 로그인하세요.
           </Typography>
-          <Button variant="contained" onClick={() => navigate('/login')}>로그인하러 가기</Button>
+          <Button variant="contained" fullWidth onClick={() => navigate('/login')}>로그인하러 가기</Button>
         </CardContent>
       </Card>
     </Box>
