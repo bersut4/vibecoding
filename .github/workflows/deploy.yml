@@ -26,7 +26,8 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Install dependencies
+      # ── my-community 빌드 ──
+      - name: Install my-community dependencies
         working-directory: lecture1/my-community
         run: npm install
 
@@ -37,12 +38,28 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
+      # ── portfolio 빌드 ──
+      - name: Install portfolio dependencies
+        working-directory: lecture1/portfolio
+        run: npm install
+
+      - name: Build portfolio
+        working-directory: lecture1/portfolio
+        run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+      # ── 배포 디렉토리 구성 ──
       - name: Prepare deployment directory
         run: |
           mkdir -p _site/my-community
+          mkdir -p _site/portfolio
           cp index.html _site/index.html
           cp -r lecture1/my-community/dist/. _site/my-community/
+          cp -r lecture1/portfolio/dist/. _site/portfolio/
           cp _site/my-community/404.html _site/404.html
+          cp _site/portfolio/index.html _site/portfolio/404.html
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
