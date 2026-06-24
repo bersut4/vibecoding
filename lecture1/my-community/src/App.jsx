@@ -22,7 +22,7 @@ const PrivateRoute = ({ children }) => {
 
 function App() {
   return (
-    <BrowserRouter basename="/my-community">
+    <BrowserRouter basename="/vibecoding/my-community">
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
