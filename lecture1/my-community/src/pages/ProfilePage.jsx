@@ -2,9 +2,10 @@ import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Box, Typography, Paper, Avatar, Button, TextField, Divider,
-  IconButton, Alert, CircularProgress,
+  IconButton, Alert, CircularProgress, Dialog, DialogTitle,
+  DialogContent, DialogActions,
 } from '@mui/material'
-import { ArrowBack, CameraAlt as CameraIcon } from '@mui/icons-material'
+import { ArrowBack, CameraAlt as CameraIcon, DeleteForever as DeleteIcon } from '@mui/icons-material'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { uploadMedia } from '../utils/uploadMedia'
@@ -25,6 +26,30 @@ export default function ProfilePage() {
   const [newPwConfirm, setNewPwConfirm] = useState('')
   const [pwMsg, setPwMsg] = useState(null)
   const [pwLoading, setPwLoading] = useState(false)
+
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleteConfirmPw, setDeleteConfirmPw] = useState('')
+  const [deleteMsg, setDeleteMsg] = useState(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
+
+  const handleDeleteAccount = async () => {
+    if (!deleteConfirmPw) { setDeleteMsg({ type: 'error', text: '비밀번호를 입력해주세요.' }); return }
+    setDeleteLoading(true)
+    setDeleteMsg(null)
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email: user.email, password: deleteConfirmPw })
+    if (signInError) {
+      setDeleteMsg({ type: 'error', text: '비밀번호가 올바르지 않습니다.' })
+      setDeleteLoading(false)
+      return
+    }
+    const { error } = await supabase.rpc('delete_user')
+    if (error) {
+      setDeleteMsg({ type: 'error', text: '탈퇴 처리 중 오류가 발생했습니다.' })
+    } else {
+      await supabase.auth.signOut()
+    }
+    setDeleteLoading(false)
+  }
 
   const handleAvatarChange = (e) => {
     const file = e.target.files[0]
@@ -173,6 +198,49 @@ export default function ProfilePage() {
           {pwLoading ? <CircularProgress size={20} /> : '비밀번호 변경'}
         </Button>
       </Paper>
+
+      {/* 계정 탈퇴 */}
+      <Paper sx={{ p: 3, border: '1px solid', borderColor: 'error.main' }}>
+        <Typography variant="h6" fontWeight={600} mb={1} color="error.main">
+          계정 탈퇴
+        </Typography>
+        <Typography variant="body2" color="text.secondary" mb={2}>
+          탈퇴 시 작성한 게시글과 댓글이 모두 삭제되며 복구할 수 없습니다.
+        </Typography>
+        <Button
+          variant="outlined" color="error" startIcon={<DeleteIcon />}
+          onClick={() => setDeleteOpen(true)}
+        >
+          계정 탈퇴하기
+        </Button>
+      </Paper>
+
+      {/* 탈퇴 확인 다이얼로그 */}
+      <Dialog open={deleteOpen} onClose={() => { setDeleteOpen(false); setDeleteConfirmPw(''); setDeleteMsg(null) }} maxWidth="xs" fullWidth>
+        <DialogTitle sx={{ color: 'error.main', fontWeight: 700 }}>⚠️ 정말 탈퇴하시겠습니까?</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            탈퇴 후에는 모든 데이터가 삭제되며 복구가 불가능합니다.
+            확인을 위해 현재 비밀번호를 입력해주세요.
+          </Typography>
+          <TextField
+            fullWidth label="현재 비밀번호" type="password"
+            value={deleteConfirmPw}
+            onChange={(e) => setDeleteConfirmPw(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleDeleteAccount()}
+            autoFocus
+          />
+          {deleteMsg && <Alert severity={deleteMsg.type} sx={{ mt: 2 }}>{deleteMsg.text}</Alert>}
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => { setDeleteOpen(false); setDeleteConfirmPw(''); setDeleteMsg(null) }}>
+            취소
+          </Button>
+          <Button variant="contained" color="error" onClick={handleDeleteAccount} disabled={deleteLoading}>
+            {deleteLoading ? <CircularProgress size={20} color="inherit" /> : '탈퇴 확인'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   )
 }

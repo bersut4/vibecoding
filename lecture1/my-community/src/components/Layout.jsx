@@ -186,7 +186,7 @@ export default function Layout() {
             <Divider />
             <MenuItem onClick={() => { navigate('/profile'); setAnchorEl(null) }}>
               <ProfileIcon fontSize="small" sx={{ mr: 1 }} />
-              프로필 수정
+              마이페이지
             </MenuItem>
             <MenuItem onClick={() => { signOut(); setAnchorEl(null) }}>
               <LogoutIcon fontSize="small" sx={{ mr: 1 }} />
