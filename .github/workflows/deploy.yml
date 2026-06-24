@@ -42,6 +42,7 @@ jobs:
           mkdir -p _site/my-community
           cp index.html _site/index.html
           cp -r lecture1/my-community/dist/. _site/my-community/
+          cp _site/my-community/404.html _site/404.html
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

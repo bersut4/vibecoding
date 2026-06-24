@@ -12,7 +12,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { uploadMedia, isVideo } from '../utils/uploadMedia'
 
-const EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🔥']
+const EMOJIS = ['👍', '👎', '❤️', '😂', '😮', '😢', '🔥']
 
 const formatTime = (iso) =>
   new Date(iso).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })

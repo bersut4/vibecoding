@@ -13,6 +13,7 @@ import {
   Logout as LogoutIcon,
   Add as AddIcon,
   Delete as DeleteIcon,
+  Edit as EditIcon,
   SportsEsports as GameIcon,
   AccountCircle as ProfileIcon,
 } from '@mui/icons-material'
@@ -30,6 +31,9 @@ export default function Layout() {
   const [addOpen, setAddOpen] = useState(false)
   const [newBoardName, setNewBoardName] = useState('')
   const [newBoardDesc, setNewBoardDesc] = useState('')
+  const [editBoardOpen, setEditBoardOpen] = useState(false)
+  const [editBoardId, setEditBoardId] = useState(null)
+  const [editBoardName, setEditBoardName] = useState('')
   const { user, profile, isAdmin, signOut } = useAuth()
   const navigate = useNavigate()
 
@@ -46,6 +50,20 @@ export default function Layout() {
     setNewBoardName('')
     setNewBoardDesc('')
     setAddOpen(false)
+    fetchBoards()
+  }
+
+  const handleOpenEditBoard = (board, e) => {
+    e.stopPropagation()
+    setEditBoardId(board.id)
+    setEditBoardName(board.name)
+    setEditBoardOpen(true)
+  }
+
+  const handleEditBoard = async () => {
+    if (!editBoardName.trim()) return
+    await supabase.from('boards').update({ name: editBoardName.trim() }).eq('id', editBoardId)
+    setEditBoardOpen(false)
     fetchBoards()
   }
 
@@ -83,9 +101,14 @@ export default function Layout() {
         {boards.map((board) => (
           <ListItem key={board.id} disablePadding secondaryAction={
             isAdmin && (
-              <IconButton size="small" onClick={(e) => handleDeleteBoard(board.id, e)} sx={{ color: 'error.main', opacity: 0.6, '&:hover': { opacity: 1 } }}>
-                <DeleteIcon sx={{ fontSize: 14 }} />
-              </IconButton>
+              <Box sx={{ display: 'flex' }}>
+                <IconButton size="small" onClick={(e) => handleOpenEditBoard(board, e)} sx={{ color: 'primary.light', opacity: 0.6, '&:hover': { opacity: 1 } }}>
+                  <EditIcon sx={{ fontSize: 13 }} />
+                </IconButton>
+                <IconButton size="small" onClick={(e) => handleDeleteBoard(board.id, e)} sx={{ color: 'error.main', opacity: 0.6, '&:hover': { opacity: 1 } }}>
+                  <DeleteIcon sx={{ fontSize: 13 }} />
+                </IconButton>
+              </Box>
             )
           }>
             <ListItemButton
@@ -201,6 +224,21 @@ export default function Layout() {
         <DialogActions>
           <Button onClick={() => setAddOpen(false)}>취소</Button>
           <Button variant="contained" onClick={handleAddBoard}>추가</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={editBoardOpen} onClose={() => setEditBoardOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>게시판 이름 수정</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus fullWidth label="게시판 이름" value={editBoardName}
+            onChange={(e) => setEditBoardName(e.target.value)} sx={{ mt: 1 }}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleEditBoard() }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditBoardOpen(false)}>취소</Button>
+          <Button variant="contained" onClick={handleEditBoard}>저장</Button>
         </DialogActions>
       </Dialog>
     </Box>
