@@ -125,7 +125,7 @@ export default function PostDetailPage() {
   useEffect(() => {
     fetchPost()
     fetchComments()
-    supabase.rpc('increment_view_count', { post_id: Number(postId) })
+    supabase.rpc('increment_view_count', { post_id: Number(postId) }).then(() => fetchPost())
   }, [postId])
 
   const fetchPost = async () => {
