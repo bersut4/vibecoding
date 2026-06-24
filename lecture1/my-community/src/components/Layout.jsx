@@ -141,7 +141,7 @@ export default function Layout() {
       <Box sx={{ flexGrow: 1 }} />
       <Divider />
       <Box sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.dark', fontSize: 14 }}>
+        <Avatar src={profile?.avatar_url ?? undefined} sx={{ width: 32, height: 32, bgcolor: 'primary.dark', fontSize: 14 }}>
           {profile?.username?.[0]?.toUpperCase() ?? user?.email?.[0]?.toUpperCase()}
         </Avatar>
         <Box sx={{ flexGrow: 1, overflow: 'hidden' }}>
@@ -175,7 +175,7 @@ export default function Layout() {
             <AddIcon />
           </IconButton>
           <IconButton onClick={(e) => setAnchorEl(e.currentTarget)}>
-            <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.dark', fontSize: 14 }}>
+            <Avatar src={profile?.avatar_url ?? undefined} sx={{ width: 32, height: 32, bgcolor: 'primary.dark', fontSize: 14 }}>
               {profile?.username?.[0]?.toUpperCase() ?? user?.email?.[0]?.toUpperCase()}
             </Avatar>
           </IconButton>

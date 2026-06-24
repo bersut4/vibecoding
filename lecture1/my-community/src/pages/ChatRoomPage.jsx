@@ -60,7 +60,7 @@ export default function ChatRoomPage() {
   const fetchMessages = async () => {
     const { data } = await supabase
       .from('messages')
-      .select('*, profiles:author_id(username), message_reactions(*)')
+      .select('*, profiles:author_id(username, avatar_url), message_reactions(*)')
       .eq('channel_id', channelId)
       .order('created_at', { ascending: true })
     setMessages(data ?? [])
@@ -135,7 +135,7 @@ export default function ChatRoomPage() {
           return (
             <Box key={msg.id} sx={{ display: 'flex', flexDirection: isMe ? 'row-reverse' : 'row', gap: 1, alignItems: 'flex-end' }}>
               {!isMe && (
-                <Avatar sx={{ width: 30, height: 30, bgcolor: 'primary.dark', fontSize: 12 }}>
+                <Avatar src={msg.profiles?.avatar_url ?? undefined} sx={{ width: 30, height: 30, bgcolor: 'primary.dark', fontSize: 12 }}>
                   {msg.profiles?.username?.[0]?.toUpperCase()}
                 </Avatar>
               )}
@@ -227,7 +227,7 @@ export default function ChatRoomPage() {
       <Paper sx={{ p: 1.5 }}>
         {uploading && <LinearProgress sx={{ mb: 1 }} />}
         <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-          <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.dark', fontSize: 13 }}>
+          <Avatar src={profile?.avatar_url ?? undefined} sx={{ width: 32, height: 32, bgcolor: 'primary.dark', fontSize: 13 }}>
             {profile?.username?.[0]?.toUpperCase()}
           </Avatar>
           <input ref={fileRef} type="file" accept="image/*,video/*" hidden onChange={handleMediaSend} />

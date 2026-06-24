@@ -52,7 +52,7 @@ const CommentItem = ({ comment, allComments, onReply, onDelete, onReaction, user
   return (
     <Box sx={{ mb: 1 }}>
       <Box sx={{ display: 'flex', gap: 1.5, p: 2, bgcolor: 'rgba(255,255,255,0.02)', borderRadius: 2 }}>
-        <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.dark', fontSize: 13 }}>
+        <Avatar src={comment.profiles?.avatar_url ?? undefined} sx={{ width: 32, height: 32, bgcolor: 'primary.dark', fontSize: 13 }}>
           {comment.profiles?.username?.[0]?.toUpperCase()}
         </Avatar>
         <Box sx={{ flexGrow: 1 }}>
@@ -88,7 +88,7 @@ const CommentItem = ({ comment, allComments, onReply, onDelete, onReaction, user
       {replies.map((reply) => (
         <Box key={reply.id} sx={{ ml: 4, mt: 0.5 }}>
           <Box sx={{ display: 'flex', gap: 1.5, p: 1.5, bgcolor: 'rgba(156,100,247,0.04)', borderRadius: 2, borderLeft: '2px solid rgba(156,100,247,0.3)' }}>
-            <Avatar sx={{ width: 26, height: 26, bgcolor: 'secondary.dark', fontSize: 11 }}>
+            <Avatar src={reply.profiles?.avatar_url ?? undefined} sx={{ width: 26, height: 26, bgcolor: 'secondary.dark', fontSize: 11 }}>
               {reply.profiles?.username?.[0]?.toUpperCase()}
             </Avatar>
             <Box sx={{ flexGrow: 1 }}>
@@ -141,7 +141,7 @@ export default function PostDetailPage() {
   const fetchComments = async () => {
     const { data } = await supabase
       .from('comments')
-      .select('*, profiles:author_id(username), comment_reactions(*)')
+      .select('*, profiles:author_id(username, avatar_url), comment_reactions(*)')
       .eq('post_id', postId)
       .order('created_at', { ascending: true })
     setComments(data ?? [])
