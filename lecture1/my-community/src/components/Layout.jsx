@@ -35,7 +35,10 @@ export default function Layout() {
 
   const drawer = (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'background.paper' }}>
-      <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+      <Box
+        onClick={() => { navigate('/boards/1'); setMobileOpen(false) }}
+        sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer', '&:hover': { opacity: 0.8 } }}
+      >
         <GameIcon sx={{ color: 'primary.main', fontSize: 28 }} />
         <Typography variant="h6" fontWeight={700} color="primary.light">
           JGA
