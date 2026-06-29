@@ -63,6 +63,15 @@ jobs:
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           VITE_KAKAO_MAP_KEY: ${{ secrets.VITE_KAKAO_MAP_KEY }}
 
+      # ── bersut4/my-app gh-pages 배포 ──
+      - name: Deploy my-app to bersut4/my-app gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          personal_token: ${{ secrets.MY_APP_DEPLOY_TOKEN }}
+          external_repository: bersut4/my-app
+          publish_branch: gh-pages
+          publish_dir: ./lecture1/my-app/dist
+
       # ── 배포 디렉토리 구성 ──
       - name: Prepare deployment directory
         run: |
