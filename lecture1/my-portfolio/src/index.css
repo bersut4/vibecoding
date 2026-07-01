@@ -1,0 +1,47 @@
+/* 로스트아크 다크 팬타지 컬러 시스템 */
+:root {
+  /* Primary Colors — 딥 블랙 네이비 */
+  --color-primary:       #0A0A14;
+  --color-primary-light: #1E1E2E;
+  --color-primary-dark:  #050508;
+
+  /* Secondary Colors — 골드·레드 */
+  --color-secondary: #C8A056;
+  --color-accent:    #D42B2B;
+
+  /* Background — 3단계 다크 레이어 */
+  --color-bg-primary:   #0A0A14;
+  --color-bg-secondary: #141420;
+  --color-bg-card:      #1E1E2E;
+
+  /* Text */
+  --color-text-primary:   #FFFFFF;
+  --color-text-secondary: #B0B0C0;
+  --color-text-muted:     #6A6A7A;
+
+  /* Border */
+  --color-border-gold: #5A4520;
+  --color-border-dark: #2E2E3E;
+
+  /* Interactive */
+  --color-button-primary: #C8A056;
+  --color-button-hover:   #E8BA66;
+  --color-link:           #FFFFFF;
+  --color-link-hover:     #C8A056;
+  --color-badge-hot:      #D42B2B;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
+}
+
+a {
+  color: var(--color-link);
+  text-decoration: none;
+}
+a:hover { color: var(--color-link-hover); }
