@@ -38,13 +38,13 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
-      # ── portfolio 빌드 ──
-      - name: Install portfolio dependencies
-        working-directory: lecture1/portfolio
+      # ── guestbook 빌드 ──
+      - name: Install guestbook dependencies
+        working-directory: lecture1/guestbook
         run: npm install
 
-      - name: Build portfolio
-        working-directory: lecture1/portfolio
+      - name: Build guestbook
+        working-directory: lecture1/guestbook
         run: npm run build
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
@@ -76,14 +76,14 @@ jobs:
       - name: Prepare deployment directory
         run: |
           mkdir -p _site/my-community
-          mkdir -p _site/portfolio
+          mkdir -p _site/guestbook
           mkdir -p _site/my-app
           cp index.html _site/index.html
           cp -r lecture1/my-community/dist/. _site/my-community/
-          cp -r lecture1/portfolio/dist/. _site/portfolio/
+          cp -r lecture1/guestbook/dist/. _site/guestbook/
           cp -r lecture1/my-app/dist/. _site/my-app/
           cp _site/my-community/404.html _site/404.html
-          cp _site/portfolio/index.html _site/portfolio/404.html
+          cp _site/guestbook/index.html _site/guestbook/404.html
           cp _site/my-app/index.html _site/my-app/404.html
 
       - name: Upload artifact
